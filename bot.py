@@ -53,8 +53,14 @@ def is_admin(user_id: int) -> bool:
 def main_menu_keyboard():
     talents = load_talents()
     buttons = []
+    row = []
     for i, t in enumerate(talents):
-        buttons.append([InlineKeyboardButton(f"👤 {t['name']}", callback_data=f"talent_{i}")])
+        row.append(InlineKeyboardButton(f"👤 {t['name']}", callback_data=f"talent_{i}"))
+        if len(row) == 2:         
+            buttons.append(row)
+            row = []
+    if row:                        
+        buttons.append(row)
     buttons.append([InlineKeyboardButton("📋 Lihat Semua Talent", callback_data="list_all")])
     return InlineKeyboardMarkup(buttons)
 
