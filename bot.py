@@ -4,6 +4,7 @@ GELISAH VCS Talent Bot
 
 import logging
 import os
+import sys
 import urllib.parse
 from telegram import (
     Update,
