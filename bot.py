@@ -1029,6 +1029,7 @@ def main():
     app.add_handler(CommandHandler("contact", contact_cmd))
     
     # Dynamic Admin Management Commands (New)
+    app.add_handler(CommandHandler("settings", settings_cmd))
     app.add_handler(CommandHandler("addadmin", add_admin_cmd))
     app.add_handler(CommandHandler("deladmin", del_admin_cmd))
     app.add_handler(CommandHandler("listadmin", list_admin_cmd))
