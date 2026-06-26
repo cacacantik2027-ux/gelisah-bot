@@ -108,7 +108,8 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         "✨ *Selamat datang di GELISAH VCS Talent Agency!*\n\n"
         "Kami menyediakan talent VCS terpercaya dan siap melayani kamu.\n\n"
         f"📊 Total talent tersedia: *{len(talents)} talent*\n\n"
-        "Pilih talent di bawah untuk melihat foto, deskripsi, dan pricelist:"
+        "Pilih talent di bawah untuk melihat foto, deskripsi, dan pricelist: \n\n"
+        f"👷🏻 *Developer: @gosahsoknal."
     )
     await update.message.reply_text(
         text,
@@ -387,7 +388,7 @@ async def callback_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         payment_text = (
             f"💳 *PEMBAYARAN*\n\n"
             f"Silakan lakukan pembayaran untuk talent *{t['name']}*.\n\n"
-            f"🏦 *Informasi Rekening & E-Wallet:*\n"
+            f"🏦 *Informasi Rekening & E-Wallet:*\n\n"
             f"`{BANK_INFO}`\n\n"
             f"📸 *Atau Scan QRIS di atas/bawah*\n\n"
             f"⚠️ *PENTING:*\n"
