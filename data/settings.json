@@ -1,6 +1,7 @@
-"welcome_text": "✨ Selamat datang di GELISAH VCS Talent Agency!\n\nKami menyediakan talent VCS terpercaya dan siap melayani kamu.\n\n📊 Total talent tersedia: {total_talents} talent\n\ndeveloper: @gosahsoknal",
+{"welcome_text": "✨ Selamat datang di GELISAH VCS Talent Agency!\n\nKami menyediakan talent VCS terpercaya dan siap melayani kamu.\n\n📊 Total talent tersedia: {total_talents} talent\n\ndeveloper: @gosahsoknal",
 "bank_info": "BCA: 1234567890 a.n GELISAH\nDANA: 081234567890",
 "qris_url": "https://placeholder.co/qris.jpg",
 "livechat_bot": "gelisahlivechat_bot",
 "log_group_id": 0,
 "additional_admins": []
+}
