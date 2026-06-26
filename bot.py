@@ -108,8 +108,8 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         "✨ *Selamat datang di GELISAH VCS Talent Agency!*\n\n"
         "Kami menyediakan talent VCS terpercaya dan siap melayani kamu.\n\n"
         f"📊 Total talent tersedia: *{len(talents)} talent*\n\n"
-        "Pilih talent di bawah untuk melihat foto, deskripsi, dan pricelist: \n\n"
-        f"👷🏻 *Developer: @gosahsoknal."
+        "Pilih talent di bawah untuk melihat foto, deskripsi, dan pricelist:\n\n"
+        f"👷🏻 *Developer: @gosahsoknal"
     )
     await update.message.reply_text(
         text,
