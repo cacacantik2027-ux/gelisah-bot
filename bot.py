@@ -55,12 +55,7 @@ def main_menu_keyboard():
     buttons = []
     for i, t in enumerate(talents):
         buttons.append([InlineKeyboardButton(f"👤 {t['name']}", callback_data=f"talent_{i}")])
-    buttons.append([InlineKeyboardButton("📋 Lihat Semua Talent", callback_data="list_all"),
-         ],
-         [[InlineKeyboardButton(
-            f"💬 Chat Admin — Info Talent Ready",
-            url=f"https://t.me/{LIVECHAT_BOT}?start={encoded}",
-        )],
+    buttons.append([InlineKeyboardButton("📋 Lihat Semua Talent", callback_data="list_all")])
    ])
     return InlineKeyboardMarkup(buttons)
 
