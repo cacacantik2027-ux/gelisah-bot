@@ -1,4 +1,4 @@
-# Talent Booking Bot
+# Bot Order Talent 
 
 Bot Telegram untuk katalog talent/influencer/model, dengan fitur **live chat
 langsung** yang menghubungkan user ke admin untuk keperluan booking
