@@ -85,9 +85,10 @@ async def get_sponsors(request):
     return _cors(web.json_response(data))
 
 
-async def _proxy_telegram_photo(file_id):
-    """Ambil isi foto dari Telegram lewat file_id lalu kirim balik ke browser,
-    supaya BOT_TOKEN tidak pernah dikirim ke browser."""
+async def _proxy_telegram_file(file_id, default_content_type="application/octet-stream"):
+    """Ambil isi file APA PUN dari Telegram lewat file_id lalu kirim balik ke
+    browser, supaya BOT_TOKEN tidak pernah dikirim ke browser. Dipakai untuk
+    foto maupun audio BGM."""
     bot_token = config.BOT_TOKEN
     async with ClientSession() as session:
         async with session.get(
@@ -102,7 +103,31 @@ async def _proxy_telegram_photo(file_id):
         file_url = f"https://api.telegram.org/file/bot{bot_token}/{file_path}"
         async with session.get(file_url) as file_resp:
             content = await file_resp.read()
-            return _cors(web.Response(body=content, content_type="image/jpeg"))
+            return _cors(web.Response(body=content, content_type=default_content_type))
+
+
+async def _proxy_telegram_photo(file_id):
+    """Proxy khusus foto (dipertahankan terpisah untuk kompatibilitas kode lama)."""
+    return await _proxy_telegram_file(file_id, default_content_type="image/jpeg")
+
+
+@routes.get("/api/bgm")
+async def get_bgm_list(request):
+    """Daftar semua musik BGM yang sudah diupload admin, buat ditampilkan
+    sebagai pilihan lagu di Mini App (user pilih sendiri mau dengar yang mana)."""
+    tracks = db.list_bgm_tracks()
+    data = [{"id": t["id"], "title": t["title"], "url": f"/bgm/{t['id']}"} for t in tracks]
+    return _cors(web.json_response(data))
+
+
+@routes.get("/bgm/{track_id:\\d+}")
+async def get_bgm_file(request):
+    """Proxy/stream file audio BGM tertentu dari Telegram."""
+    track_id = int(request.match_info["track_id"])
+    track = db.get_bgm_track(track_id)
+    if not track:
+        return web.Response(status=404, text="BGM tidak ditemukan")
+    return await _proxy_telegram_file(track["file_id"], default_content_type=track.get("mime_type") or "audio/mpeg")
 
 
 @routes.get("/photo/greeting")
@@ -163,6 +188,7 @@ async def get_photo(request):
 
 @routes.options("/api/{tail:.*}")
 @routes.options("/photo/{tail:.*}")
+@routes.options("/bgm/{tail:.*}")
 async def preflight(request):
     return _cors(web.Response())
 

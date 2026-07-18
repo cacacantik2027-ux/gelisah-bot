@@ -96,6 +96,15 @@ def end_chat_keyboard(session_id):
     ])
 
 
+def bgm_list_keyboard(tracks):
+    """Daftar BGM terupload, tiap baris = 1 lagu dengan tombol hapus di sampingnya."""
+    rows = [
+        [InlineKeyboardButton(f"🗑 {t['title']}", callback_data=f"delbgm_{t['id']}")]
+        for t in tracks
+    ]
+    return InlineKeyboardMarkup(rows)
+
+
 def addtalent_step_keyboard(back_callback=None):
     rows = []
     if back_callback:

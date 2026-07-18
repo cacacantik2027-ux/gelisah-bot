@@ -58,6 +58,15 @@ def init_db():
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS bgm_tracks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                file_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                mime_type TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
         conn.commit()
         _migrate_schema(conn)
 
@@ -205,6 +214,34 @@ def get_sponsor(sponsor_id):
 def delete_sponsor(sponsor_id):
     with get_conn() as conn:
         conn.execute("DELETE FROM sponsors WHERE id = ?", (sponsor_id,))
+        conn.commit()
+
+
+def add_bgm_track(file_id, title, mime_type=None):
+    with get_conn() as conn:
+        cur = conn.execute(
+            "INSERT INTO bgm_tracks (file_id, title, mime_type) VALUES (?, ?, ?)",
+            (file_id, title, mime_type),
+        )
+        conn.commit()
+        return cur.lastrowid
+
+
+def list_bgm_tracks():
+    with get_conn() as conn:
+        rows = conn.execute("SELECT * FROM bgm_tracks ORDER BY id ASC").fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_bgm_track(track_id):
+    with get_conn() as conn:
+        row = conn.execute("SELECT * FROM bgm_tracks WHERE id = ?", (track_id,)).fetchone()
+        return dict(row) if row else None
+
+
+def delete_bgm_track(track_id):
+    with get_conn() as conn:
+        conn.execute("DELETE FROM bgm_tracks WHERE id = ?", (track_id,))
         conn.commit()
 
 

@@ -35,7 +35,8 @@ logger = logging.getLogger(__name__)
     ADD_SPONSOR_PHOTO, ADD_SPONSOR_NAME, ADD_SPONSOR_DESC, ADD_SPONSOR_URL,
     EDIT_TALENT_VALUE, EDIT_SPONSOR_VALUE,
     EDIT_CHANNEL2_PHOTO, EDIT_CHANNEL2_DESC, EDIT_CHANNEL2_URL,
-) = range(20)
+    ADD_BGM_FILE, ADD_BGM_TITLE,
+) = range(22)
 
 # Label ramah-manusia untuk tiap field talent/sponsor yang bisa diedit,
 # dipakai di pesan konfirmasi setelah admin berhasil mengubah suatu field.
@@ -1723,6 +1724,97 @@ async def cancel_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE
     return ConversationHandler.END
 
 
+# ==================== MULTI-BGM (upload musik lewat bot) ====================
+async def addbgm_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Mulai alur upload BGM baru (khusus admin): admin kirim file audio dulu,
+    lalu bot minta judul lagunya."""
+    if not is_admin(update.effective_user.id):
+        return ConversationHandler.END
+    await update.message.reply_text(
+        "🎵 Kirim file *audio/musik*-nya sekarang (mp3, dll -- lewat menu lampiran > Musik/Audio "
+        "di Telegram, JANGAN dikirim sebagai foto/video).\n\nKetik /cancel untuk batal.",
+        parse_mode="Markdown",
+    )
+    return ADD_BGM_FILE
+
+
+async def addbgm_receive_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = update.message
+    audio = message.audio or (message.document if message.document and (message.document.mime_type or "").startswith("audio/") else None)
+
+    if not audio:
+        await message.reply_text(
+            "Itu bukan file audio. Kirim file musik lewat menu lampiran > Musik/Audio di Telegram "
+            "(bukan foto/video/voice note), atau /cancel untuk batal."
+        )
+        return ADD_BGM_FILE
+
+    default_title = getattr(audio, "title", None) or getattr(audio, "file_name", None) or "BGM tanpa judul"
+    context.user_data["new_bgm"] = {
+        "file_id": audio.file_id,
+        "mime_type": getattr(audio, "mime_type", None) or "audio/mpeg",
+        "default_title": default_title,
+    }
+    await message.reply_text(
+        f"Judul lagu ini apa? (ketik `-` untuk pakai judul bawaan: *{default_title}*)",
+        parse_mode="Markdown",
+    )
+    return ADD_BGM_TITLE
+
+
+async def addbgm_receive_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.strip()
+    nb = context.user_data.get("new_bgm")
+    if not nb:
+        await update.message.reply_text("Sesi upload BGM sudah tidak berlaku, coba /addbgm lagi.")
+        return ConversationHandler.END
+
+    title = nb["default_title"] if text == "-" else text
+    track_id = db.add_bgm_track(file_id=nb["file_id"], title=title, mime_type=nb["mime_type"])
+    context.user_data.pop("new_bgm", None)
+
+    await update.message.reply_text(
+        f"✅ BGM \"{title}\" berhasil ditambahkan (ID: {track_id}). "
+        f"Sekarang otomatis muncul jadi pilihan lagu di Mini App.\n\n"
+        f"Lihat semua BGM: /listbgm",
+    )
+    return ConversationHandler.END
+
+
+async def listbgm_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Tampilkan semua BGM yang sudah diupload, tiap baris ada tombol hapus."""
+    if not is_admin(update.effective_user.id):
+        return
+    tracks = db.list_bgm_tracks()
+    if not tracks:
+        await update.message.reply_text(
+            "Belum ada BGM yang diupload. Pakai /addbgm untuk menambahkan."
+        )
+        return
+    await update.message.reply_text(
+        f"🎵 Ada {len(tracks)} BGM terpasang:",
+        reply_markup=kb.bgm_list_keyboard(tracks),
+    )
+
+
+async def delbgm_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    if not is_admin(query.from_user.id):
+        return
+    track_id = int(query.data.split("_", 1)[1])
+    db.delete_bgm_track(track_id)
+
+    tracks = db.list_bgm_tracks()
+    if not tracks:
+        await query.edit_message_text("Semua BGM sudah dihapus. Pakai /addbgm untuk menambahkan lagi.")
+        return
+    await query.edit_message_text(
+        f"🎵 Ada {len(tracks)} BGM terpasang:",
+        reply_markup=kb.bgm_list_keyboard(tracks),
+    )
+
+
 async def groupid_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"Chat ID: `{update.effective_chat.id}`", parse_mode="Markdown")
 
@@ -1887,6 +1979,8 @@ async def on_startup(application: Application):
         BotCommand("groupid", "Lihat ID chat/grup ini"),
         BotCommand("postkatalog", "Posting tombol Mini App ke channel"),
         BotCommand("exportdb", "Backup database sekarang (kirim ke DM)"),
+        BotCommand("addbgm", "Upload musik BGM baru buat Mini App"),
+        BotCommand("listbgm", "Lihat/hapus daftar BGM"),
         BotCommand("cancel", "Batalkan proses yang sedang berjalan"),
     ]
     for admin_id in config.ADMIN_IDS:
@@ -2034,6 +2128,22 @@ def main():
         allow_reentry=True,
     )
     app.add_handler(settings_conv)
+
+    # ---- Multi-BGM: upload musik lewat bot (terpisah dari settings_conv
+    # supaya tidak perlu mengubah menu settings yang sudah ada) ----
+    bgm_conv = ConversationHandler(
+        entry_points=[CommandHandler("addbgm", addbgm_command)],
+        states={
+            ADD_BGM_FILE: [MessageHandler((filters.AUDIO | filters.Document.AUDIO) & ~filters.COMMAND, addbgm_receive_file)],
+            ADD_BGM_TITLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, addbgm_receive_title)],
+        },
+        fallbacks=[CommandHandler("cancel", cancel_conversation)],
+        per_message=False,
+        allow_reentry=True,
+    )
+    app.add_handler(bgm_conv)
+    app.add_handler(CommandHandler("listbgm", listbgm_command))
+    app.add_handler(CallbackQueryHandler(delbgm_callback, pattern="^delbgm_"))
 
     # ---- Live chat: relay dua arah ----
     # Balasan admin (reply ke pesan live chat yang diteruskan), baik di grup
