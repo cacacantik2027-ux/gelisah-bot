@@ -1,3 +1,0 @@
-python-telegram-bot==22.7
-aiohttp==3.10.5
-tzdata
