@@ -70,7 +70,7 @@ def _build_watermark_layer(width: int, height: int, opacity: float) -> "Image.Im
     return layer
 
 
-def apply_watermark(image_bytes: bytes, opacity: float = 0.22) -> bytes:
+def apply_watermark(image_bytes: bytes, opacity: float = 0.50) -> bytes:
     """Tempel logo.png sebagai watermark transparan berulang di atas foto,
     lalu kembalikan bytes JPEG hasil akhirnya. Kalau proses gagal karena
     alasan apa pun (mis. bytes bukan gambar valid), foto ASLI dikembalikan
@@ -88,7 +88,7 @@ def apply_watermark(image_bytes: bytes, opacity: float = 0.22) -> bytes:
         return image_bytes
 
 
-def generate_watermark_only(width: int, height: int, opacity: float = 0.35) -> bytes:
+def generate_watermark_only(width: int, height: int, opacity: float = 0.50) -> bytes:
     """Buat gambar PNG TRANSPARAN berukuran width x height, berisi HANYA pola
     watermark (tanpa foto apa pun di baliknya). Opacity dibuat lebih tinggi
     dari watermark biasa (default 0.35 vs 0.22) supaya kalau ini yang
