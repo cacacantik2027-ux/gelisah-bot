@@ -1,0 +1,21 @@
+python-telegram-bot[job-queue]==22.7
+aiohttp==3.10.5
+tzdata
+Pillow==11.0.0
+
+# --- OCR untuk fitur sensor bukti tf (opsional, bot tetap jalan tanpa ini) ---
+# Salah satu sebenarnya cukup, tapi dipasang dua-duanya supaya ada fallback
+# otomatis: pytesseract dicoba duluan (butuh binary sistem tesseract-ocr,
+# lihat catatan di bawah), kalau tidak tersedia bot otomatis pakai easyocr
+# (murni pip, tidak butuh apt, tapi menarik PyTorch & unduh model saat
+# pertama dipakai).
+pytesseract==0.3.13
+easyocr==1.7.2
+numpy
+
+# CATATAN DEPLOY: pytesseract HANYA wrapper Python -- mesin OCR aslinya
+# (tesseract-ocr) harus dipasang lewat package manager OS, BUKAN pip, contoh:
+#   Ubuntu/Debian : sudo apt-get install -y tesseract-ocr
+#   Docker        : tambahkan baris apt-get di atas ke Dockerfile
+# Kalau binary ini tidak ada, bot otomatis fallback ke easyocr (asal
+# easyocr==1.7.2 & numpy di atas berhasil terpasang).
